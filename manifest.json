@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "id": "parler-tts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "display_name": "Parler-TTS Mini v1 (offline, prompt-driven)",
   "summary": "Apache-2.0 prompt-driven TTS. ~2 GB model, English only, 34 named consistent speakers + free-form voice description.",
   "author": "Subtitld add-on team",
