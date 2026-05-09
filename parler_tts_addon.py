@@ -42,7 +42,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO,
 
 PROTOCOL = 1
 ADDON_ID = 'parler-tts'
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 
 DEFAULT_REPO = os.environ.get('PARLER_TTS_REPO', 'parler-tts/parler-tts-mini-v1')
 
