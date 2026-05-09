@@ -1,0 +1,79 @@
+{
+  "manifest_version": 1,
+  "id": "parler-tts",
+  "version": "1.0.0",
+  "display_name": "Parler-TTS Mini v1 (offline, prompt-driven)",
+  "summary": "Apache-2.0 prompt-driven TTS. ~2 GB model, English only, 34 named consistent speakers + free-form voice description.",
+  "author": "Subtitld add-on team",
+  "license": "Apache-2.0 (wrapper) + Apache-2.0 (Parler-TTS Mini v1 weights)",
+  "executable": "bin/parler-tts-addon",
+  "protocol": 1,
+  "startup_timeout_sec": 180,
+  "platforms": ["linux", "macos", "windows"],
+  "tasks": ["tts.synthesize"],
+  "voice_clone": false,
+  "languages": ["en"],
+  "voices": [
+    {"id": "parler-jon",     "language": "en", "display_name": "Jon — clear, warm male (recommended)"},
+    {"id": "parler-lea",     "language": "en", "display_name": "Lea — clear, warm female (recommended)"},
+    {"id": "parler-gary",    "language": "en", "display_name": "Gary — clear male (recommended)"},
+    {"id": "parler-jenna",   "language": "en", "display_name": "Jenna — clear female (recommended)"},
+    {"id": "parler-mike",    "language": "en", "display_name": "Mike — clear male (recommended)"},
+    {"id": "parler-laura",   "language": "en", "display_name": "Laura — clear female (recommended)"},
+    {"id": "parler-karen",   "language": "en", "display_name": "Karen — female"},
+    {"id": "parler-rick",    "language": "en", "display_name": "Rick — male"},
+    {"id": "parler-brenda",  "language": "en", "display_name": "Brenda — female"},
+    {"id": "parler-david",   "language": "en", "display_name": "David — male"},
+    {"id": "parler-eileen",  "language": "en", "display_name": "Eileen — female"},
+    {"id": "parler-jordan",  "language": "en", "display_name": "Jordan — non-binary"},
+    {"id": "parler-yann",    "language": "en", "display_name": "Yann — male"},
+    {"id": "parler-joy",     "language": "en", "display_name": "Joy — female"},
+    {"id": "parler-james",   "language": "en", "display_name": "James — male"},
+    {"id": "parler-eric",    "language": "en", "display_name": "Eric — male"},
+    {"id": "parler-lauren",  "language": "en", "display_name": "Lauren — female"},
+    {"id": "parler-rose",    "language": "en", "display_name": "Rose — female"},
+    {"id": "parler-will",    "language": "en", "display_name": "Will — male"},
+    {"id": "parler-jason",   "language": "en", "display_name": "Jason — male"},
+    {"id": "parler-aaron",   "language": "en", "display_name": "Aaron — male"},
+    {"id": "parler-naomie",  "language": "en", "display_name": "Naomie — female"},
+    {"id": "parler-alisa",   "language": "en", "display_name": "Alisa — female"},
+    {"id": "parler-patrick", "language": "en", "display_name": "Patrick — male"},
+    {"id": "parler-jerry",   "language": "en", "display_name": "Jerry — male"},
+    {"id": "parler-tina",    "language": "en", "display_name": "Tina — female"},
+    {"id": "parler-bill",    "language": "en", "display_name": "Bill — male"},
+    {"id": "parler-tom",     "language": "en", "display_name": "Tom — male"},
+    {"id": "parler-carol",   "language": "en", "display_name": "Carol — female"},
+    {"id": "parler-barbara", "language": "en", "display_name": "Barbara — female"},
+    {"id": "parler-rebecca", "language": "en", "display_name": "Rebecca — female"},
+    {"id": "parler-anna",    "language": "en", "display_name": "Anna — female"},
+    {"id": "parler-bruce",   "language": "en", "display_name": "Bruce — male"},
+    {"id": "parler-emily",   "language": "en", "display_name": "Emily — female"}
+  ],
+  "models": [
+    {"id": "parler-tts-mini-v1", "repo": "parler-tts/parler-tts-mini-v1", "size_mb": 2200, "bundled": false}
+  ],
+  "disk_required_mb": 4096,
+  "ram_required_mb": 4096,
+  "gpu": "optional",
+  "config_schema": {
+    "fields": [
+      {
+        "key": "device",
+        "type": "select",
+        "label": "Inference device",
+        "default": "cpu",
+        "options": [
+          {"value": "cpu",  "label": "CPU (slow, ~10-30 s/line)"},
+          {"value": "cuda", "label": "CUDA (NVIDIA GPU, fast)"},
+          {"value": "mps",  "label": "MPS (Apple Silicon, beta)"}
+        ]
+      },
+      {
+        "key": "voice_description",
+        "type": "string",
+        "label": "Default voice description",
+        "help": "Plain-English prompt: 'A female speaker with a slightly low-pitched voice, clear close-mic recording, no background noise.' Per-speaker overrides set in the speaker panel take precedence."
+      }
+    ]
+  }
+}
