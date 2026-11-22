@@ -42,7 +42,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO,
 
 PROTOCOL = 1
 ADDON_ID = 'parler-tts'
-VERSION = '1.0.2'
+VERSION = '26.11.1'
 
 DEFAULT_REPO = os.environ.get('PARLER_TTS_REPO', 'parler-tts/parler-tts-mini-v1')
 
@@ -76,13 +76,18 @@ DEFAULT_DESC_TEMPLATE = (
 # Wire helpers
 # ---------------------------------------------------------------------------
 _write_lock = threading.Lock()
+# stdout is the protocol channel. Libraries print to it, which the host
+# can't parse, so frames go to a handle of their own and print() goes to
+# stderr.
+_protocol_out = sys.stdout
+sys.stdout = sys.stderr
 
 
 def write_frame(frame: dict) -> None:
     line = json.dumps(frame, ensure_ascii=False)
     with _write_lock:
-        sys.stdout.write(line + '\n')
-        sys.stdout.flush()
+        _protocol_out.write(line + '\n')
+        _protocol_out.flush()
 
 
 def emit_progress(rid, value, message=''):
@@ -134,8 +139,13 @@ def _load_model(device: str):
 # Audio writing
 # ---------------------------------------------------------------------------
 def _write_wav(path: str, wav, sample_rate: int) -> tuple[float, int, int]:
+    """16-bit mono WAV with the stdlib `wave` module.
+
+    1.0.2 used soundfile, whose CFFI binding PyInstaller can leave out of
+    the bundle; `wave` can't go missing.
+    """
+    import wave
     import numpy as np
-    import soundfile as sf
 
     arr = np.asarray(wav)
     if arr.ndim > 1:
@@ -143,8 +153,12 @@ def _write_wav(path: str, wav, sample_rate: int) -> tuple[float, int, int]:
     if arr.ndim != 1:
         raise RuntimeError(f'unexpected waveform shape: {arr.shape}')
 
-    arr = np.clip(arr.astype(np.float32, copy=False), -1.0, 1.0)
-    sf.write(path, arr, int(sample_rate), subtype='PCM_16')
+    pcm = (np.clip(arr.astype(np.float32, copy=False), -1.0, 1.0) * 32767.0).astype('<i2')
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(int(sample_rate))
+        w.writeframes(pcm.tobytes())
 
     duration = float(len(arr)) / float(sample_rate or 1)
     return duration, int(sample_rate), 1
@@ -232,6 +246,11 @@ def handle_tts_synthesize(rid: str, params: dict, defaults: dict) -> None:
 # Main loop
 # ---------------------------------------------------------------------------
 def main() -> int:
+    if getattr(sys, 'frozen', False) and sys.argv[1:2] == ['-m']:
+        # Something ran the frozen add-on as if it were Python
+        # (`sys.executable -m pip ...`). It isn't; don't answer as an add-on.
+        sys.stderr.write('parler-tts-addon is not a Python interpreter\n')
+        return 2
     manifest_path = Path(__file__).resolve().parent / 'manifest.json'
     voices: list[dict] = []
     languages: list[str] = []
@@ -262,6 +281,14 @@ def main() -> int:
              'voice_clone': False},
         ],
     })
+
+    # Load torch and parler_tts here, in the main thread, before any
+    # request: imported from a request thread, frozen torch can hang
+    # loading its native extension (seen with the Kokoro add-on on Windows).
+    try:
+        import parler_tts  # type: ignore  # noqa: F401
+    except Exception:
+        log.exception('parler_tts import failed')   # reported per request by _load_model
 
     for raw_line in sys.stdin:
         raw_line = raw_line.strip()
@@ -305,4 +332,8 @@ def main() -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    code = main()
+    # Leave without interpreter shutdown: torch's thread pools can keep a
+    # frozen add-on alive after `shutdown`. Every frame is flushed by now.
+    sys.stderr.flush()
+    os._exit(code)

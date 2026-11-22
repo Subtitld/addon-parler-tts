@@ -68,6 +68,15 @@ jobs:
           # tested against.
           pip install parler-tts
 
+      - name: Keep a full pkg_resources
+        shell: bash
+        run: |
+          # torch pulls setuptools 84, whose pkg_resources lacks NullProvider;
+          # PyInstaller's pkg_resources runtime hook then kills the frozen
+          # add-on at start (seen on macOS with the Kokoro add-on). torch
+          # needs >= 77.
+          pip install "setuptools>=77,<81"
+
       - name: Build add-on bundle
         run: pyinstaller parler-tts-addon.spec --distpath dist/
 
@@ -105,6 +114,7 @@ jobs:
                   except Exception: pass
           print('frame:', (line or '').strip())
           if not line:
+              print(proc.stderr.read()[-4000:])
               sys.exit('no hello frame received within 30 s')
           frame = json.loads(line)
           assert frame.get('type') == 'hello', frame
@@ -119,6 +129,13 @@ jobs:
           for expected in ('parler-laura', 'parler-jon', 'parler-jenna'):
               assert expected in ids, f"missing voice {expected}: {ids}"
           PY
+
+      - name: Speak real lines with the frozen binary
+        shell: bash
+        run: |
+          BIN="dist/parler-tts-addon/parler-tts-addon"
+          if [ "$RUNNER_OS" = "Windows" ]; then BIN="${BIN}.exe"; fi
+          python tools/smoke_synth.py "$BIN"
 
       - name: Pack zip
         id: pack

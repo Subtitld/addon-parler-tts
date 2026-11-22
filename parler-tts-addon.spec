@@ -19,13 +19,18 @@ hiddenimports = (
     _safe_collect(collect_submodules, 'parler_tts')
     + _safe_collect(collect_submodules, 'transformers')
     + _safe_collect(collect_submodules, 'sentencepiece')
-    + _safe_collect(collect_submodules, 'soundfile')
-    + _safe_collect(collect_submodules, 'descript')
+        + _safe_collect(collect_submodules, 'descript')
+    + _safe_collect(collect_submodules, 'audiotools')
+    + _safe_collect(collect_submodules, 'dac')
 )
 datas = (
     _safe_collect(collect_data_files, 'parler_tts')
     + _safe_collect(collect_data_files, 'transformers')
     + _safe_collect(collect_data_files, 'sentencepiece')
+    # audiotools reads core/templates/headers.html when it is imported;
+    # 1.0.2 left it out and every line failed to load the model.
+    + _safe_collect(collect_data_files, 'audiotools')
+    + _safe_collect(collect_data_files, 'dac')
     + [('manifest.json', '.')]
 )
 
@@ -41,6 +46,10 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=['tensorflow', 'jax', 'flax', 'gradio', 'wandb', 'matplotlib'],
+    # The DAC codec compiles `snake` with torch.jit.script when it is
+    # imported, and TorchScript reads the function's .py source. Ship the
+    # sources next to the bytecode for the packages that do this.
+    module_collection_mode={'dac': 'pyz+py', 'audiotools': 'pyz+py'},
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

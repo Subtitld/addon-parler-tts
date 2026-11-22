@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "id": "parler-tts",
-  "version": "1.0.2",
+  "version": "26.11.1",
   "display_name": "Parler-TTS Mini v1 (offline, prompt-driven)",
   "summary": "Apache-2.0 prompt-driven TTS. ~2 GB model, English only, 34 named consistent speakers + free-form voice description.",
   "author": "Subtitld add-on team",
@@ -11,6 +11,7 @@
   "startup_timeout_sec": 180,
   "platforms": ["linux", "macos", "windows"],
   "tasks": ["tts.synthesize"],
+  "compute": "gpu_preferred",
   "voice_clone": false,
   "languages": ["en"],
   "voices": [

@@ -41,10 +41,20 @@ pip install pyinstaller
 pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
 # parler-tts hard-pins transformers==4.46.1; let pip resolve the rest.
 pip install parler-tts
+pip install "setuptools>=77,<81"   # a full pkg_resources for PyInstaller's hook
 pyinstaller parler-tts-addon.spec --distpath dist/
-cd dist/parler-tts-addon
-zip -r ../parler-tts-1.0.0-linux-x86_64.zip . ../../manifest.json ../../LICENSE ../../README.md
+python tools/smoke_synth.py dist/parler-tts-addon/parler-tts-addon   # speaks real lines
 ```
+
+The release workflow does the same on Linux, macOS and Windows for a tag
+`v<version>` matching `manifest.json`, and fails if the frozen add-on can't
+speak two real lines.
+
+Up to 1.0.2 no line could be spoken: the bundle lacked audiotools' data
+files (`core/templates/headers.html`, read on import), and the DAC codec's
+`snake` is compiled with TorchScript on import, which needs the `.py`
+source that PyInstaller leaves out. The spec now collects the data and
+ships the sources of `dac` and `audiotools`.
 
 The hard pin on `transformers==4.46.1` is upstream's choice — drift
 broke Parler in earlier and later versions. We let pip pull it directly
